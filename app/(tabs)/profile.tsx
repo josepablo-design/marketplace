@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import InventoryList from '../../components/InventoryList';
@@ -6,6 +7,7 @@ import { supabase } from '../../services/supabase';
 
 export default function ProfileScreen() {
     const { session } = useAuth();
+    const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [username, setUsername] = useState('');
     const [fullName, setFullName] = useState('');
@@ -15,7 +17,11 @@ export default function ProfileScreen() {
     const [role, setRole] = useState('buyer');
 
     useEffect(() => {
-        if (session) getProfile();
+        if (session) {
+            getProfile();
+        } else {
+            setLoading(false);
+        }
     }, [session]);
 
     async function getProfile() {
@@ -78,6 +84,42 @@ export default function ProfileScreen() {
         } finally {
             setLoading(false);
         }
+    }
+
+    // Show guest screen if not logged in
+    if (!session && !loading) {
+        return (
+            <View className="flex-1 justify-center items-center bg-gray-50 px-4">
+                <View className="w-full max-w-sm bg-white p-8 rounded-2xl shadow-lg items-center">
+                    <Text className="text-3xl font-bold text-center mb-2 text-gray-800">Mi Perfil</Text>
+                    <Text className="text-gray-600 text-center mb-6">
+                        Inicia sesión para gestionar tu perfil y crear publicaciones
+                    </Text>
+
+                    <TouchableOpacity
+                        className="w-full py-4 rounded-xl bg-blue-600 mb-3"
+                        onPress={() => router.push('/(auth)/login')}
+                    >
+                        <Text className="text-white text-center font-bold text-lg">Iniciar Sesión</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        className="w-full py-4 rounded-xl border-2 border-blue-600"
+                        onPress={() => router.push('/(auth)/register')}
+                    >
+                        <Text className="text-blue-600 text-center font-bold text-lg">Crear Cuenta</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        );
+    }
+
+    if (loading) {
+        return (
+            <View className="flex-1 justify-center items-center">
+                <ActivityIndicator size="large" />
+            </View>
+        );
     }
 
     return (

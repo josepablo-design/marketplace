@@ -10,24 +10,55 @@ export default function Register() {
     const router = useRouter();
 
     async function signUpWithEmail() {
-        setLoading(true);
-        const {
-            data: { session },
-            error,
-        } = await supabase.auth.signUp({
-            email,
-            password,
-        });
+        // Validation
+        if (!email || !password) {
+            Alert.alert('Error', 'Por favor completa todos los campos');
+            return;
+        }
 
-        if (error) {
-            Alert.alert(error.message);
-            setLoading(false);
-        } else {
-            if (!session) {
-                Alert.alert('Please check your inbox for email verification!');
-            } else {
-                router.replace('/(tabs)');
+        if (password.length < 6) {
+            Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
+            return;
+        }
+
+        console.log('Iniciando registro con:', email);
+        setLoading(true);
+
+        try {
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+            });
+
+            console.log('Respuesta de Supabase:', { data, error });
+
+            if (error) {
+                console.error('Error de registro:', error);
+                Alert.alert('Error', error.message);
+                setLoading(false);
+                return;
             }
+
+            // Verificar si se creó la sesión
+            if (!data.session) {
+                console.log('Sin sesión - verificación de email requerida');
+                Alert.alert(
+                    'Registro Exitoso',
+                    'Por favor revisa tu correo electrónico para verificar tu cuenta.',
+                    [{ text: 'OK', onPress: () => router.replace('/login') }]
+                );
+            } else {
+                console.log('Registro exitoso con sesión:', data.session.user.email);
+                Alert.alert(
+                    'Registro Exitoso',
+                    '¡Bienvenido!',
+                    [{ text: 'OK', onPress: () => router.replace('/(tabs)') }]
+                );
+            }
+        } catch (error) {
+            console.error('Error inesperado:', error);
+            Alert.alert('Error', 'Ocurrió un error inesperado. Por favor intenta de nuevo.');
+        } finally {
             setLoading(false);
         }
     }
@@ -45,18 +76,21 @@ export default function Register() {
                         value={email}
                         placeholder="email@address.com"
                         autoCapitalize="none"
+                        keyboardType="email-address"
+                        autoComplete="email"
                     />
                 </View>
 
                 <View className="mb-6">
-                    <Text className="text-gray-600 mb-2 font-medium">Password</Text>
+                    <Text className="text-gray-600 mb-2 font-medium">Password (mínimo 6 caracteres)</Text>
                     <TextInput
                         className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                         onChangeText={(text) => setPassword(text)}
                         value={password}
                         secureTextEntry={true}
-                        placeholder="Password"
+                        placeholder="Contraseña"
                         autoCapitalize="none"
+                        autoComplete="password"
                     />
                 </View>
 
