@@ -7,6 +7,7 @@ create table profiles (
   avatar_url text,
   website text,
   role text check (role in ('buyer', 'seller', 'admin')) default 'buyer',
+  seller_type text check (seller_type in ('artist', 'store', 'individual')) default 'individual',
   bio text,
   
   constraint username_length check (char_length(username) >= 3)
